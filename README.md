@@ -5,7 +5,7 @@ this repo is just a quick hack to unsubscribe from all newsletters and stuff. It
 
 ## Usage
 
-clone repo and just start the server in background. you have to provide your gmail credentials as environment variables. go to gmail api in console create a project, enable gmail api and create credentials. then save the json. 
+clone repo and do 'npm install' and 'npm start'. Then the following process will be automatic:
 
 
 Visit the Google Cloud Console.

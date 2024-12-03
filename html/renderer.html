@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Unsubscribe Tool</title>
+</head>
+
+<body>
+    <h1>Email Unsubscribe Tool</h1>
+
+    <form id="preferences-form">
+        <label>
+            Number of Emails to Check (Default: 20):
+            <input type="number" id="email-check-limit" value="20">
+        </label>
+        <br>
+        <label>
+            Run Process Visibly? (Default: No):
+            <select id="run-headless">
+                <option value="false">Yes</option>
+                <option value="true" selected>No</option>
+            </select>
+        </label>
+        <br>
+        <button type="submit">Start</button>
+    </form>
+
+    <h2>Emails</h2>
+    <table id="email-table">
+        <thead>
+            <tr>
+                <th>Absender</th>
+                <th>Betreff</th>
+                <th>Empfangen am</th>
+                <th>Newsletter</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamisch generierte Zeilen kommen hierhin -->
+        </tbody>
+    </table>
+    <h2>Logs:</h2>
+    <pre id="logs"></pre>
+
+    <script>
+        // Senden von Benutzerpräferenzen an den Main-Prozess
+        document.getElementById('preferences-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // reset logs and emails table
+            document.getElementById('logs').textContent = '';
+            document.getElementById('email-table').querySelector('tbody').innerHTML = '';
+
+            const emailCheckLimit = parseInt(document.getElementById('email-check-limit').value, 10) || 200;
+            const runHeadless = document.getElementById('run-headless').value === 'true';
+
+            window.api.send('start-script', { emailCheckLimit, runHeadless });
+        });
+
+        // Logs anzeigen - Neuste Logs oben
+        window.api.receive('script-log', (log) => {
+            const logElement = document.getElementById('logs');
+            logElement.textContent = `${log}\n` + logElement.textContent; // Neuer Log zuerst
+        });
+
+        // Exit-Status anzeigen - Auch oben
+        window.api.receive('script-exit', (message) => {
+            const logElement = document.getElementById('logs');
+            logElement.textContent = `${message}\n` + logElement.textContent; // Exit-Log zuerst
+        });
+    </script>
+    <script>
+        // Empfange E-Mail-Daten vom Main-Prozess
+        window.api.receive('email-data', (emailData) => {
+            console.log('Received email data:', emailData);
+            addEmailRow(emailData); // Füge die E-Mail in die Tabelle ein
+        });
+
+        // Beispiel für die Funktion, die E-Mail-Daten zur Tabelle hinzufügt
+        function addEmailRow(emailData) {
+            console.log('Adding email row:', emailData);
+
+            const tableBody = document.querySelector('#email-table tbody');
+
+            const row = document.createElement('tr');
+
+            const fromCell = document.createElement('td');
+            fromCell.textContent = emailData.from;
+
+            const subjectCell = document.createElement('td');
+            subjectCell.textContent = emailData.subject;
+
+            const receivedAtCell = document.createElement('td');
+            receivedAtCell.textContent = emailData.receivedAt;
+
+
+            const newsletterCell = document.createElement('td');
+            newsletterCell.textContent = emailData.isNewsletter ? 'Ja' : 'Nein';
+
+            const statusCell = document.createElement('td');
+            statusCell.textContent = emailData.status;
+            statusCell.className = emailData.status === 'Unprocessed' ? 'status-unprocessed' : 'status-processed';
+
+            row.appendChild(fromCell);
+            row.appendChild(subjectCell);
+            row.appendChild(receivedAtCell);
+            row.appendChild(newsletterCell);
+            row.appendChild(statusCell);
+
+            tableBody.appendChild(row);
+        }
+    </script>
+
+</body>
+
+</html>

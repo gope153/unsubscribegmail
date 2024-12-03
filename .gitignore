@@ -3,3 +3,5 @@ token.json
 node_modules/
 processed_emails.log
 unsubscribe_log.json
+
+.env
